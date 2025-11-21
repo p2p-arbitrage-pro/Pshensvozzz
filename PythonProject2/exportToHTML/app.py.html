@@ -1,0 +1,128 @@
+<html>
+<head>
+<title>app.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+app.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">flask </span><span class="s0">import </span><span class="s1">Flask</span><span class="s2">, </span><span class="s1">render_template</span><span class="s2">, </span><span class="s1">request</span><span class="s2">, </span><span class="s1">redirect</span><span class="s2">, </span><span class="s1">url_for</span><span class="s2">, </span><span class="s1">flash</span>
+<span class="s0">from </span><span class="s1">flask_sqlalchemy </span><span class="s0">import </span><span class="s1">SQLAlchemy</span>
+<span class="s0">from </span><span class="s1">flask_login </span><span class="s0">import </span><span class="s1">LoginManager</span><span class="s2">, </span><span class="s1">login_user</span><span class="s2">, </span><span class="s1">logout_user</span><span class="s2">, </span><span class="s1">login_required</span><span class="s2">, </span><span class="s1">current_user</span>
+<span class="s0">from </span><span class="s1">werkzeug</span><span class="s2">.</span><span class="s1">security </span><span class="s0">import </span><span class="s1">generate_password_hash</span><span class="s2">, </span><span class="s1">check_password_hash</span>
+<span class="s0">from </span><span class="s1">models </span><span class="s0">import </span><span class="s1">db</span><span class="s2">, </span><span class="s1">User</span>
+<span class="s0">from </span><span class="s1">config </span><span class="s0">import </span><span class="s1">Config</span>
+
+<span class="s1">app </span><span class="s2">= </span><span class="s1">Flask</span><span class="s2">(</span><span class="s1">__name__</span><span class="s2">)</span>
+<span class="s1">app</span><span class="s2">.</span><span class="s1">config</span><span class="s2">.</span><span class="s1">from_object</span><span class="s2">(</span><span class="s1">Config</span><span class="s2">)</span>
+
+<span class="s3"># Инициализация расширений</span>
+<span class="s1">db</span><span class="s2">.</span><span class="s1">init_app</span><span class="s2">(</span><span class="s1">app</span><span class="s2">)</span>
+<span class="s1">login_manager </span><span class="s2">= </span><span class="s1">LoginManager</span><span class="s2">()</span>
+<span class="s1">login_manager</span><span class="s2">.</span><span class="s1">init_app</span><span class="s2">(</span><span class="s1">app</span><span class="s2">)</span>
+<span class="s1">login_manager</span><span class="s2">.</span><span class="s1">login_view </span><span class="s2">= </span><span class="s4">'login'</span>
+<span class="s1">login_manager</span><span class="s2">.</span><span class="s1">login_message </span><span class="s2">= </span><span class="s4">'Пожалуйста, войдите для доступа к этой странице.'</span>
+
+
+<span class="s2">@</span><span class="s1">login_manager</span><span class="s2">.</span><span class="s1">user_loader</span>
+<span class="s0">def </span><span class="s1">load_user</span><span class="s2">(</span><span class="s1">user_id</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s1">User</span><span class="s2">.</span><span class="s1">query</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s1">int</span><span class="s2">(</span><span class="s1">user_id</span><span class="s2">))</span>
+
+
+<span class="s2">@</span><span class="s1">app</span><span class="s2">.</span><span class="s1">route</span><span class="s2">(</span><span class="s4">'/'</span><span class="s2">)</span>
+<span class="s0">def </span><span class="s1">index</span><span class="s2">():</span>
+    <span class="s0">return </span><span class="s1">render_template</span><span class="s2">(</span><span class="s4">'index.html'</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">app</span><span class="s2">.</span><span class="s1">route</span><span class="s2">(</span><span class="s4">'/register'</span><span class="s2">, </span><span class="s1">methods</span><span class="s2">=[</span><span class="s4">'GET'</span><span class="s2">, </span><span class="s4">'POST'</span><span class="s2">])</span>
+<span class="s0">def </span><span class="s1">register</span><span class="s2">():</span>
+    <span class="s0">if </span><span class="s1">current_user</span><span class="s2">.</span><span class="s1">is_authenticated</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">redirect</span><span class="s2">(</span><span class="s1">url_for</span><span class="s2">(</span><span class="s4">'dashboard'</span><span class="s2">))</span>
+
+    <span class="s0">if </span><span class="s1">request</span><span class="s2">.</span><span class="s1">method </span><span class="s2">== </span><span class="s4">'POST'</span><span class="s2">:</span>
+        <span class="s1">username </span><span class="s2">= </span><span class="s1">request</span><span class="s2">.</span><span class="s1">form</span><span class="s2">[</span><span class="s4">'username'</span><span class="s2">]</span>
+        <span class="s1">email </span><span class="s2">= </span><span class="s1">request</span><span class="s2">.</span><span class="s1">form</span><span class="s2">[</span><span class="s4">'email'</span><span class="s2">]</span>
+        <span class="s1">password </span><span class="s2">= </span><span class="s1">request</span><span class="s2">.</span><span class="s1">form</span><span class="s2">[</span><span class="s4">'password'</span><span class="s2">]</span>
+
+        <span class="s3"># Проверка существования пользователя</span>
+        <span class="s0">if </span><span class="s1">User</span><span class="s2">.</span><span class="s1">query</span><span class="s2">.</span><span class="s1">filter_by</span><span class="s2">(</span><span class="s1">username</span><span class="s2">=</span><span class="s1">username</span><span class="s2">).</span><span class="s1">first</span><span class="s2">():</span>
+            <span class="s1">flash</span><span class="s2">(</span><span class="s4">'Пользователь с таким именем уже существует'</span><span class="s2">, </span><span class="s4">'error'</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">render_template</span><span class="s2">(</span><span class="s4">'register.html'</span><span class="s2">)</span>
+
+        <span class="s0">if </span><span class="s1">User</span><span class="s2">.</span><span class="s1">query</span><span class="s2">.</span><span class="s1">filter_by</span><span class="s2">(</span><span class="s1">email</span><span class="s2">=</span><span class="s1">email</span><span class="s2">).</span><span class="s1">first</span><span class="s2">():</span>
+            <span class="s1">flash</span><span class="s2">(</span><span class="s4">'Пользователь с таким email уже существует'</span><span class="s2">, </span><span class="s4">'error'</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">render_template</span><span class="s2">(</span><span class="s4">'register.html'</span><span class="s2">)</span>
+
+        <span class="s3"># Создание нового пользователя</span>
+        <span class="s1">user </span><span class="s2">= </span><span class="s1">User</span><span class="s2">(</span><span class="s1">username</span><span class="s2">=</span><span class="s1">username</span><span class="s2">, </span><span class="s1">email</span><span class="s2">=</span><span class="s1">email</span><span class="s2">)</span>
+        <span class="s1">user</span><span class="s2">.</span><span class="s1">set_password</span><span class="s2">(</span><span class="s1">password</span><span class="s2">)</span>
+
+        <span class="s1">db</span><span class="s2">.</span><span class="s1">session</span><span class="s2">.</span><span class="s1">add</span><span class="s2">(</span><span class="s1">user</span><span class="s2">)</span>
+        <span class="s1">db</span><span class="s2">.</span><span class="s1">session</span><span class="s2">.</span><span class="s1">commit</span><span class="s2">()</span>
+
+        <span class="s1">flash</span><span class="s2">(</span><span class="s4">'Регистрация прошла успешно! Теперь вы можете войти.'</span><span class="s2">, </span><span class="s4">'success'</span><span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">redirect</span><span class="s2">(</span><span class="s1">url_for</span><span class="s2">(</span><span class="s4">'login'</span><span class="s2">))</span>
+
+    <span class="s0">return </span><span class="s1">render_template</span><span class="s2">(</span><span class="s4">'register.html'</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">app</span><span class="s2">.</span><span class="s1">route</span><span class="s2">(</span><span class="s4">'/login'</span><span class="s2">, </span><span class="s1">methods</span><span class="s2">=[</span><span class="s4">'GET'</span><span class="s2">, </span><span class="s4">'POST'</span><span class="s2">])</span>
+<span class="s0">def </span><span class="s1">login</span><span class="s2">():</span>
+    <span class="s0">if </span><span class="s1">current_user</span><span class="s2">.</span><span class="s1">is_authenticated</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">redirect</span><span class="s2">(</span><span class="s1">url_for</span><span class="s2">(</span><span class="s4">'dashboard'</span><span class="s2">))</span>
+
+    <span class="s0">if </span><span class="s1">request</span><span class="s2">.</span><span class="s1">method </span><span class="s2">== </span><span class="s4">'POST'</span><span class="s2">:</span>
+        <span class="s1">username </span><span class="s2">= </span><span class="s1">request</span><span class="s2">.</span><span class="s1">form</span><span class="s2">[</span><span class="s4">'username'</span><span class="s2">]</span>
+        <span class="s1">password </span><span class="s2">= </span><span class="s1">request</span><span class="s2">.</span><span class="s1">form</span><span class="s2">[</span><span class="s4">'password'</span><span class="s2">]</span>
+        <span class="s1">remember </span><span class="s2">= </span><span class="s0">True if </span><span class="s1">request</span><span class="s2">.</span><span class="s1">form</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s4">'remember'</span><span class="s2">) </span><span class="s0">else False</span>
+
+        <span class="s1">user </span><span class="s2">= </span><span class="s1">User</span><span class="s2">.</span><span class="s1">query</span><span class="s2">.</span><span class="s1">filter_by</span><span class="s2">(</span><span class="s1">username</span><span class="s2">=</span><span class="s1">username</span><span class="s2">).</span><span class="s1">first</span><span class="s2">()</span>
+
+        <span class="s0">if </span><span class="s1">user </span><span class="s0">and </span><span class="s1">user</span><span class="s2">.</span><span class="s1">check_password</span><span class="s2">(</span><span class="s1">password</span><span class="s2">):</span>
+            <span class="s1">login_user</span><span class="s2">(</span><span class="s1">user</span><span class="s2">, </span><span class="s1">remember</span><span class="s2">=</span><span class="s1">remember</span><span class="s2">)</span>
+            <span class="s1">next_page </span><span class="s2">= </span><span class="s1">request</span><span class="s2">.</span><span class="s1">args</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s4">'next'</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">redirect</span><span class="s2">(</span><span class="s1">next_page </span><span class="s0">or </span><span class="s1">url_for</span><span class="s2">(</span><span class="s4">'dashboard'</span><span class="s2">))</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">flash</span><span class="s2">(</span><span class="s4">'Неверное имя пользователя или пароль'</span><span class="s2">, </span><span class="s4">'error'</span><span class="s2">)</span>
+
+    <span class="s0">return </span><span class="s1">render_template</span><span class="s2">(</span><span class="s4">'login.html'</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">app</span><span class="s2">.</span><span class="s1">route</span><span class="s2">(</span><span class="s4">'/logout'</span><span class="s2">)</span>
+<span class="s2">@</span><span class="s1">login_required</span>
+<span class="s0">def </span><span class="s1">logout</span><span class="s2">():</span>
+    <span class="s1">logout_user</span><span class="s2">()</span>
+    <span class="s1">flash</span><span class="s2">(</span><span class="s4">'Вы успешно вышли из системы'</span><span class="s2">, </span><span class="s4">'success'</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">redirect</span><span class="s2">(</span><span class="s1">url_for</span><span class="s2">(</span><span class="s4">'index'</span><span class="s2">))</span>
+
+
+<span class="s2">@</span><span class="s1">app</span><span class="s2">.</span><span class="s1">route</span><span class="s2">(</span><span class="s4">'/dashboard'</span><span class="s2">)</span>
+<span class="s2">@</span><span class="s1">login_required</span>
+<span class="s0">def </span><span class="s1">dashboard</span><span class="s2">():</span>
+    <span class="s0">return </span><span class="s1">render_template</span><span class="s2">(</span><span class="s4">'dashboard.html'</span><span class="s2">, </span><span class="s1">user</span><span class="s2">=</span><span class="s1">current_user</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">app</span><span class="s2">.</span><span class="s1">route</span><span class="s2">(</span><span class="s4">'/profile'</span><span class="s2">)</span>
+<span class="s2">@</span><span class="s1">login_required</span>
+<span class="s0">def </span><span class="s1">profile</span><span class="s2">():</span>
+    <span class="s0">return </span><span class="s1">render_template</span><span class="s2">(</span><span class="s4">'profile.html'</span><span class="s2">, </span><span class="s1">user</span><span class="s2">=</span><span class="s1">current_user</span><span class="s2">)</span>
+
+
+<span class="s3"># Создание таблиц в базе данных</span>
+<span class="s0">with </span><span class="s1">app</span><span class="s2">.</span><span class="s1">app_context</span><span class="s2">():</span>
+    <span class="s1">db</span><span class="s2">.</span><span class="s1">create_all</span><span class="s2">()</span>
+
+<span class="s0">if </span><span class="s1">__name__ </span><span class="s2">== </span><span class="s4">'__main__'</span><span class="s2">:</span>
+    <span class="s1">app</span><span class="s2">.</span><span class="s1">run</span><span class="s2">(</span><span class="s1">debug</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span></pre>
+</body>
+</html>

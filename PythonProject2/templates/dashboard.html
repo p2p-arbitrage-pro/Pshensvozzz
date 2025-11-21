@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-tachometer-alt"></i> Дашборд</h1>
+            <span class="badge bg-primary">Пользователь: {{ user.username }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">154</h4>
+                        <p class="card-text">Посещений</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-eye fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">23</h4>
+                        <p class="card-text">Задач</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tasks fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">7</h4>
+                        <p class="card-text">Уведомлений</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-bell fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">95%</h4>
+                        <p class="card-text">Прогресс</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Последняя активность</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Вы успешно вошли в систему
+                    </div>
+                    <div class="list-group-item">
+                        <i class="fas fa-user-plus text-primary me-2"></i>
+                        Новый пользователь зарегистрирован
+                    </div>
+                    <div class="list-group-item">
+                        <i class="fas fa-cog text-warning me-2"></i>
+                        Система обновлена до версии 2.1
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Быстрые действия</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user"></i> Профиль
+                    </a>
+                    <button class="btn btn-outline-success">
+                        <i class="fas fa-cog"></i> Настройки
+                    </button>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                        <i class="fas fa-sign-out-alt"></i> Выйти
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

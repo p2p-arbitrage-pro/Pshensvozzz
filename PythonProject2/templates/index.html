@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">Добро пожаловать на Flask Site!</h1>
+        <p class="lead mb-4">Это современный веб-сайт с системой авторизации, созданный на Flask.</p>
+
+        {% if not current_user.is_authenticated %}
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 gap-3">
+                <i class="fas fa-user-plus"></i> Зарегистрироваться
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg px-4">
+                <i class="fas fa-sign-in-alt"></i> Войти
+            </a>
+        </div>
+        {% else %}
+        <div class="alert alert-success">
+            <h4><i class="fas fa-check-circle"></i> Вы вошли как {{ current_user.username }}</h4>
+            <p>Теперь у вас есть доступ ко всем функциям сайта!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Безопасность</h5>
+                <p class="card-text">Надежная система аутентификации с хешированием паролей.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-mobile-alt fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Адаптивность</h5>
+                <p class="card-text">Полностью адаптивный дизайн для всех устройств.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-bolt fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Скорость</h5>
+                <p class="card-text">Быстрая и оптимизированная работа на всех платформах.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
