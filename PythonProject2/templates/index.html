@@ -1,58 +1,124 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Главная страница{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 mx-auto text-center">
-        <h1 class="display-4 mb-4">Добро пожаловать на Flask Site!</h1>
-        <p class="lead mb-4">Это современный веб-сайт с системой авторизации, созданный на Flask.</p>
 
-        {% if not current_user.is_authenticated %}
-        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 gap-3">
-                <i class="fas fa-user-plus"></i> Зарегистрироваться
-            </a>
-            <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg px-4">
-                <i class="fas fa-sign-in-alt"></i> Войти
-            </a>
-        </div>
-        {% else %}
-        <div class="alert alert-success">
-            <h4><i class="fas fa-check-circle"></i> Вы вошли как {{ current_user.username }}</h4>
-            <p>Теперь у вас есть доступ ко всем функциям сайта!</p>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
+{% if calendar_months %}
 <div class="row mt-5">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Безопасность</h5>
-                <p class="card-text">Надежная система аутентификации с хешированием паролей.</p>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="card-title mb-2">Календарь олимпиад</h5>
+                    {% set first_month = calendar_months[0] if calendar_months else None %}
+                    <div class="calendar-nav">
+                        <button class="btn btn-outline-light btn-sm calendar-nav-prev" type="button" aria-label="Предыдущий месяц">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="calendar-nav-label">{{ first_month.month_label if first_month else '' }}</span>
+                        <button class="btn btn-outline-light btn-sm calendar-nav-next" type="button" aria-label="Следующий месяц">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#calendarCollapse" aria-expanded="true" aria-controls="calendarCollapse">
+                    Свернуть / развернуть
+                </button>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-mobile-alt fa-3x text-success mb-3"></i>
-                <h5 class="card-title">Адаптивность</h5>
-                <p class="card-text">Полностью адаптивный дизайн для всех устройств.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-bolt fa-3x text-warning mb-3"></i>
-                <h5 class="card-title">Скорость</h5>
-                <p class="card-text">Быстрая и оптимизированная работа на всех платформах.</p>
+            <div id="calendarCollapse" class="collapse show">
+                <div class="card-body">
+                    <div class="calendar">
+                        {% for month in calendar_months %}
+                        <div class="calendar-month{% if loop.first %} is-active{% endif %}" data-month-label="{{ month.month_label }}" data-month-index="{{ loop.index0 }}">
+                            <div class="calendar-month-header">
+                                <h6 class="mb-0">{{ month.month_label }}</h6>
+                            </div>
+                            <div class="calendar-scroll">
+                                <div class="calendar-weekdays">
+                                    {% for day_label in weekday_labels %}
+                                    <div class="calendar-weekday">{{ day_label }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="calendar-grid">
+                                    {% for week in month.weeks %}
+                                        {% for day in week %}
+                                            {% if day %}
+                                            <div class="calendar-day {% if day.events %}calendar-day--has-event{% endif %}">
+                                                <div class="calendar-day-number">{{ day.day }}</div>
+                                                {% if day.events %}
+                                                <ul class="calendar-events">
+                                                    {% for event in day.events %}
+                                                    <li>
+                                                        {% if event.link %}
+                                                        <a href="{{ event.link }}" target="_blank" rel="noopener">
+                                                            {{ event.name }} — {{ event.subject }}
+                                                        </a>
+                                                        {% else %}
+                                                        <span class="calendar-event-text">{{ event.name }} — {{ event.subject }}</span>
+                                                        {% endif %}
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% endif %}
+                                            </div>
+                                            {% else %}
+                                            <div class="calendar-day calendar-day--empty"></div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if undated_events %}
+                    <div class="mt-4">
+                        <h6 class="text-uppercase">События без точной даты</h6>
+                        <div class="list-group list-group-flush">
+                            {% for event in undated_events %}
+                            <div class="list-group-item">
+                                <div class="fw-semibold">{{ event.name }}</div>
+                                <div>{{ event.subject }} · {{ event.stage }} · {{ event.date }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
+
+{% if olympiad_news %}
+<div class="row mt-5">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Новости олимпиад</h5>
+                <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#newsCollapse" aria-expanded="true" aria-controls="newsCollapse">
+                    Свернуть / развернуть
+                </button>
+            </div>
+            <div id="newsCollapse" class="collapse show">
+                <div class="list-group list-group-flush">
+                    {% for item in olympiad_news %}
+                    <a class="list-group-item list-group-item-action" href="{{ item.source }}" target="_blank" rel="noopener">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ item.title }}</h6>
+                            <small class="text-muted">{{ item.date }}</small>
+                        </div>
+                        <p class="mb-1">{{ item.summary }}</p>
+                        <small class="text-muted">{{ item.subject }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

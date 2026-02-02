@@ -1,0 +1,74 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Загрузка материалов{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Отправить материалы на модерацию</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Название темы</label>
+                        <input class="form-control" type="text" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Краткое описание</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Файл</label>
+                        <input class="form-control" type="file" id="file" name="file" accept=".pdf,.doc,.docx,.txt,.zip">
+                    </div>
+                    <div class="mb-3">
+                        <label for="video" class="form-label">Видео</label>
+                        <input class="form-control" type="file" id="video" name="video" accept=".mp4,.webm,.mov">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Отправить на одобрение
+                    </button>
+                </form>
+                <p class="text-muted mt-3">Поддерживаемые форматы: PDF, DOC, DOCX, TXT, ZIP и видео MP4/WEBM/MOV.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Мои заявки</h5>
+            </div>
+            <div class="card-body">
+                {% if submissions %}
+                <div class="list-group list-group-flush">
+                    {% for submission in submissions %}
+                    <div class="list-group-item">
+                        <div class="fw-semibold">{{ submission.title }}</div>
+                        {% if submission.description %}
+                        <div class="small text-muted">{{ submission.description }}</div>
+                        {% endif %}
+                        <div class="small">Заявка #{{ submission.id }}</div>
+                        <div class="small">
+                            {% if submission.file_name %}Файл: {{ submission.file_name }}{% endif %}
+                            {% if submission.video_name %}<br>Видео: {{ submission.video_name }}{% endif %}
+                        </div>
+                        {% if submission.status == 'approved' %}
+                        <span class="badge bg-success mt-2">Одобрено</span>
+                        {% elif submission.status == 'rejected' %}
+                        <span class="badge bg-danger mt-2">Отклонено</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark mt-2">На проверке</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Пока нет отправленных материалов.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -28,4 +28,48 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    const calendar = document.querySelector('.calendar');
+    if (calendar) {
+        const months = Array.from(calendar.querySelectorAll('.calendar-month'));
+        const label = document.querySelector('.calendar-nav-label');
+        const prevButton = document.querySelector('.calendar-nav-prev');
+        const nextButton = document.querySelector('.calendar-nav-next');
+        let activeIndex = 0;
+
+        const updateCalendar = () => {
+            months.forEach((month, index) => {
+                month.classList.toggle('is-active', index === activeIndex);
+            });
+            if (label && months[activeIndex]) {
+                label.textContent = months[activeIndex].dataset.monthLabel || '';
+            }
+            if (prevButton) {
+                prevButton.disabled = activeIndex === 0;
+            }
+            if (nextButton) {
+                nextButton.disabled = activeIndex === months.length - 1;
+            }
+        };
+
+        if (months.length > 0) {
+            updateCalendar();
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    if (activeIndex > 0) {
+                        activeIndex -= 1;
+                        updateCalendar();
+                    }
+                });
+            }
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    if (activeIndex < months.length - 1) {
+                        activeIndex += 1;
+                        updateCalendar();
+                    }
+                });
+            }
+        }
+    }
 });

@@ -1,0 +1,51 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Теория{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Раздел теории</h5>
+            </div>
+            <div class="card-body">
+                {% if submissions %}
+                <div class="row g-4">
+                    {% for submission in submissions %}
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="mb-2">{{ submission.title }}</h6>
+                                {% if submission.description %}
+                                <p class="text-muted mb-2">{{ submission.description }}</p>
+                                {% endif %}
+                                <div class="small mb-3">Автор: {{ submission.user.username }}</div>
+                                <p class="text-muted mb-3">{{ submission.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                                {% if submission.file_name %}
+                                <a class="btn btn-outline-light btn-sm" href="{{ url_for('download_submission_file', submission_id=submission.id) }}">
+                                    <i class="fas fa-download"></i> Скачать: {{ submission.file_name }}
+                                </a>
+                                {% endif %}
+                                {% if submission.video_name %}
+                                <div class="mt-3">
+                                    <div class="small mb-1">Видео: {{ submission.video_name }}</div>
+                                    <video class="w-100" controls preload="metadata">
+                                        <source src="{{ url_for('stream_submission_video', submission_id=submission.id) }}">
+                                        Ваш браузер не поддерживает воспроизведение видео.
+                                    </video>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Пока нет одобренных материалов.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
