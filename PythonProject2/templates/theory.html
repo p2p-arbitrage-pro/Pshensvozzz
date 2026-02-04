@@ -10,30 +10,40 @@
                 <h5 class="card-title mb-0">Раздел теории</h5>
             </div>
             <div class="card-body">
-                {% if submissions %}
+                {% if theory_groups %}
                 <div class="row g-4">
-                    {% for submission in submissions %}
+                    {% for item in theory_groups %}
                     <div class="col-lg-6">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h6 class="mb-2">{{ submission.title }}</h6>
-                                {% if submission.description %}
-                                <p class="text-muted mb-2">{{ submission.description }}</p>
+                                <h6 class="mb-2">{{ item.title }}</h6>
+                                {% if item.description %}
+                                <p class="text-muted mb-2">{{ item.description }}</p>
                                 {% endif %}
-                                <div class="small mb-3">Автор: {{ submission.user.username }}</div>
-                                <p class="text-muted mb-3">{{ submission.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
-                                {% if submission.file_name %}
-                                <a class="btn btn-outline-light btn-sm" href="{{ url_for('download_submission_file', submission_id=submission.id) }}">
-                                    <i class="fas fa-download"></i> Скачать: {{ submission.file_name }}
-                                </a>
+                                <div class="small mb-3">Автор: {{ item.user.username }}</div>
+                                <p class="text-muted mb-3">{{ item.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                                {% if item.files %}
+                                <div class="d-flex flex-column gap-2">
+                                    {% for file_item in item.files %}
+                                    <a class="btn btn-outline-light btn-sm" href="{{ url_for('download_submission_file', submission_id=file_item.id) }}">
+                                        <i class="fas fa-download"></i> Скачать: {{ file_item.name }}
+                                    </a>
+                                    {% endfor %}
+                                </div>
                                 {% endif %}
-                                {% if submission.video_name %}
+                                {% if item.videos %}
                                 <div class="mt-3">
-                                    <div class="small mb-1">Видео: {{ submission.video_name }}</div>
+                                    <div class="small mb-2">Видео</div>
+                                    {% for video_item in item.videos %}
+                                    <div class="small mb-1">{{ video_item.name }}</div>
                                     <video class="w-100" controls preload="metadata">
-                                        <source src="{{ url_for('stream_submission_video', submission_id=submission.id) }}">
+                                        <source src="{{ url_for('stream_submission_video', submission_id=video_item.id) }}">
                                         Ваш браузер не поддерживает воспроизведение видео.
                                     </video>
+                                    {% if not loop.last %}
+                                    <hr>
+                                    {% endif %}
+                                    {% endfor %}
                                 </div>
                                 {% endif %}
                             </div>

@@ -63,13 +63,17 @@
                                     <form method="post" action="{{ url_for('approve_submission', submission_id=submission.id) }}" class="d-inline">
                                         <button type="submit" class="btn btn-success btn-sm">Одобрить</button>
                                     </form>
+                                    {% if can_full_moderation %}
                                     <form method="post" action="{{ url_for('reject_submission', submission_id=submission.id) }}" class="d-inline">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">Отклонить</button>
                                     </form>
                                     {% endif %}
+                                    {% endif %}
+                                    {% if can_full_moderation %}
                                     <form method="post" action="{{ url_for('delete_submission', submission_id=submission.id) }}" class="d-inline">
                                         <button type="submit" class="btn btn-outline-light btn-sm">Удалить</button>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}

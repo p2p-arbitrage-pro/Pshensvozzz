@@ -1,0 +1,11 @@
+# Local secrets
+PythonProject2/.env
+.env
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Flask instance folders
+instance/
+PythonProject2/instance/

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование события{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Редактировать событие</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('edit_calendar_event', event_id=event.id) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Название</label>
+                            <input type="text" name="name" class="form-control" value="{{ event.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Предмет</label>
+                            <input type="text" name="subject" class="form-control" value="{{ event.subject or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Этап</label>
+                            <input type="text" name="stage" class="form-control" value="{{ event.stage or '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Дата</label>
+                            <input type="date" name="date" class="form-control" value="{{ event.date.strftime('%Y-%m-%d') if event.date else '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Формат</label>
+                            <input type="text" name="format" class="form-control" value="{{ event.format or '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Ссылка</label>
+                            <input type="url" name="link" class="form-control" value="{{ event.link or '' }}">
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <a class="btn btn-outline-light" href="{{ url_for('admin_calendar') }}">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
