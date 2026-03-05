@@ -18,6 +18,9 @@ class User(UserMixin, db.Model):
     email_verification_code = db.Column(db.String(12))
     email_verification_expires_at = db.Column(db.DateTime)
     email_verification_sent_at = db.Column(db.DateTime)
+    password_reset_code = db.Column(db.String(12))
+    password_reset_expires_at = db.Column(db.DateTime)
+    password_reset_sent_at = db.Column(db.DateTime)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

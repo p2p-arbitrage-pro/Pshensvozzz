@@ -26,7 +26,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Пожалуйста, войдите для доступа к этой странице.'
 
-UPLOAD_ROOT = os.path.join(app.instance_path, "uploads")
+UPLOAD_ROOT = app.config.get("UPLOAD_ROOT") or os.path.join(app.instance_path, "uploads")
 FILES_DIR = os.path.join(UPLOAD_ROOT, "files")
 VIDEOS_DIR = os.path.join(UPLOAD_ROOT, "videos")
 os.makedirs(FILES_DIR, exist_ok=True)
@@ -36,6 +36,8 @@ ALLOWED_FILE_EXTS = {"pdf", "doc", "docx", "ppt", "pptx", "odp", "txt", "zip"}
 ALLOWED_VIDEO_EXTS = {"mp4", "webm", "mov"}
 VERIFICATION_TTL_MIN_SECONDS = 444
 VERIFICATION_TTL_MAX_SECONDS = 1488
+PASSWORD_RESET_TTL_SECONDS = 900
+PASSWORD_RESET_RESEND_SECONDS = 60
 REMINDER_DAYS_BEFORE = 3
 
 MONTH_LABELS_RU = [
@@ -210,6 +212,27 @@ def _send_verification_email(user):
     if not sent:
         app.logger.warning("Verification code for %s: %s", user.email, code)
     return sent, code, ttl_seconds
+
+
+def _issue_password_reset_code(user):
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    user.password_reset_code = code
+    user.password_reset_expires_at = datetime.utcnow() + timedelta(seconds=PASSWORD_RESET_TTL_SECONDS)
+    user.password_reset_sent_at = datetime.utcnow()
+    return code, PASSWORD_RESET_TTL_SECONDS
+
+
+def _announce_password_reset_code(user, code, ttl_seconds):
+    message = f"Код смены пароля для {user.email}: {code} (TTL {ttl_seconds}s)"
+    app.logger.warning(message)
+    print(message)
+
+
+def _send_password_reset_code(user):
+    code, ttl_seconds = _issue_password_reset_code(user)
+    db.session.commit()
+    _announce_password_reset_code(user, code, ttl_seconds)
+    return code, ttl_seconds
 
 
 def verified_required(view):
@@ -924,6 +947,86 @@ def resend_verification_email():
     return redirect(url_for('verify_email'))
 
 
+@app.route('/password-reset', methods=['GET', 'POST'])
+def password_reset_request():
+    email_prefill = request.args.get('email', '').strip()
+    if current_user.is_authenticated and current_user.email and not email_prefill:
+        email_prefill = current_user.email
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        if not email:
+            flash('Введите email.', 'error')
+            return redirect(url_for('password_reset_request'))
+
+        user = User.query.filter(func.lower(User.email) == email.lower()).first()
+        if not user:
+            flash('Пользователь с таким email не найден.', 'error')
+            return redirect(url_for('password_reset_request'))
+
+        if user.password_reset_sent_at:
+            elapsed = datetime.utcnow() - user.password_reset_sent_at
+            if elapsed < timedelta(seconds=PASSWORD_RESET_RESEND_SECONDS):
+                flash('Подождите минуту перед повторной отправкой.', 'error')
+                return redirect(url_for('password_reset_request'))
+
+        _send_password_reset_code(user)
+        flash('Код для смены пароля выведен в консоль сервера.', 'success')
+        return redirect(url_for('password_reset_confirm', email=email))
+
+    return render_template('password_reset_request.html', email_prefill=email_prefill)
+
+
+@app.route('/password-reset/confirm', methods=['GET', 'POST'])
+def password_reset_confirm():
+    email_prefill = request.args.get('email', '').strip()
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        code = request.form.get('code', '').strip()
+        password = request.form.get('password', '')
+        password_confirm = request.form.get('password_confirm', '')
+
+        if not email or not code or not password or not password_confirm:
+            flash('Заполните все поля.', 'error')
+            return redirect(url_for('password_reset_confirm', email=email))
+
+        if password != password_confirm:
+            flash('Пароли не совпадают.', 'error')
+            return redirect(url_for('password_reset_confirm', email=email))
+
+        user = User.query.filter(func.lower(User.email) == email.lower()).first()
+        if not user:
+            flash('Пользователь не найден.', 'error')
+            return redirect(url_for('password_reset_confirm'))
+
+        if not user.password_reset_code or not user.password_reset_expires_at:
+            flash('Код не найден. Запросите новый.', 'error')
+            return redirect(url_for('password_reset_request'))
+
+        if datetime.utcnow() > user.password_reset_expires_at:
+            user.password_reset_code = None
+            user.password_reset_expires_at = None
+            user.password_reset_sent_at = None
+            db.session.commit()
+            flash('Срок действия кода истёк. Запросите новый.', 'error')
+            return redirect(url_for('password_reset_request'))
+
+        if code != user.password_reset_code:
+            flash('Неверный код.', 'error')
+            return redirect(url_for('password_reset_confirm', email=email))
+
+        user.set_password(password)
+        user.password_reset_code = None
+        user.password_reset_expires_at = None
+        user.password_reset_sent_at = None
+        db.session.commit()
+        flash('Пароль успешно изменён. Войдите снова.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('password_reset_confirm.html', email_prefill=email_prefill)
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -1039,6 +1142,15 @@ with app.app_context():
             db.session.commit()
         if 'email_verification_sent_at' not in columns:
             db.session.execute(text('ALTER TABLE user ADD COLUMN email_verification_sent_at DATETIME'))
+            db.session.commit()
+        if 'password_reset_code' not in columns:
+            db.session.execute(text('ALTER TABLE user ADD COLUMN password_reset_code VARCHAR(12)'))
+            db.session.commit()
+        if 'password_reset_expires_at' not in columns:
+            db.session.execute(text('ALTER TABLE user ADD COLUMN password_reset_expires_at DATETIME'))
+            db.session.commit()
+        if 'password_reset_sent_at' not in columns:
+            db.session.execute(text('ALTER TABLE user ADD COLUMN password_reset_sent_at DATETIME'))
             db.session.commit()
         db.session.execute(
             text("UPDATE user SET is_admin = CASE WHEN lower(username) = 'admin' THEN 1 ELSE 0 END")
