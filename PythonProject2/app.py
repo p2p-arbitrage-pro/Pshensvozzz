@@ -4,9 +4,7 @@ import random
 import secrets
 import smtplib
 import uuid
-from datetime import date, datetime, timedelta
-from email.message import EmailMessage
-from functools import wraps
+from datetime import date
 
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
